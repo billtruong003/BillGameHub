@@ -8,6 +8,7 @@ public class Bullet : MonoBehaviour
     [SerializeField] private GameObject objectBullet;
     [SerializeField] private ParticleSystem explosion;
     [SerializeField] private ParticleSystem spark;
+    [SerializeField] public void TriggerBulletObject() => objectBullet.SetActive(true);
     private string tagCol;
     void OnTriggerEnter(Collider other)
     {
@@ -30,7 +31,9 @@ public class Bullet : MonoBehaviour
 
     private IEnumerator ReturnBulletToPool()
     {
-        yield return new WaitForSeconds(3f);
+        yield return new WaitUntil(() => explosion.isStopped || spark.isStopped);
+        yield return new WaitForSeconds(0.5f);
+        rb.isKinematic = false;
         bulletPooling.ReturnBullet(gameObject);
     }
 }

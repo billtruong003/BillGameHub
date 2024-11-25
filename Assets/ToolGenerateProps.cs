@@ -1,29 +1,16 @@
+using System;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
-
-public enum PropShape
-{
-    Circle,
-    Square,
-    Triangle,
-    Hexagon,
-    Star,
-    Line,
-    Cross,
-    Spiral,
-    Grid,
-    Heart,
-    Custom // Thêm tùy chọn Custom
-}
-
+using BillUtils;
 [ExecuteInEditMode]
 public class ToolGenerateProps : MonoBehaviour
 {
     [Header("General Settings")]
     [SerializeField] private GameObject propPrefab; // Prefab được dùng để sinh prop
-    [SerializeField] private PropShape shapeType; // Hình dạng cần sắp xếp
-    [SerializeField] private int propCount = 10; // Số lượng prop
-    [SerializeField] private float size = 1f; // Kích thước hoặc khoảng cách giữa các prop
+    [SerializeField] private Constants.PropShape shapeType; // Hình dạng cần sắp xếp
+    [SerializeField, Range(0,10)] private int propCount = 10; // Số lượng prop
+    [SerializeField, Range(-20,20)] private float size = 1f; // Kích thước hoặc khoảng cách giữa các prop
     [SerializeField] private Color gizmoColor = Color.green; // Màu của Gizmo trong Scene View
 
     [Header("Custom Grid Settings")]
@@ -32,58 +19,77 @@ public class ToolGenerateProps : MonoBehaviour
     [SerializeField] private List<Vector2Int> selectedCells = new List<Vector2Int>(); // Các ô được chọn trong lưới
     [SerializeField] private Color customCellColor = Color.yellow; // Màu của các ô trong custom grid
 
-    private List<GameObject> spawnedProps = new List<GameObject>();
+    [SerializeField] private List<GameObject> spawnedProps = new List<GameObject>();
+    public string propName;
 
     // Getters for Editor
-    public PropShape ShapeType => shapeType;
+    public Constants.PropShape ShapeType => shapeType;
     public float Size => size;
     public List<Vector2Int> SelectedCells => selectedCells;
+    // Sử dụng enum từ Constants
+    
+    [SerializeField] public List<Prop> props = new List<Prop>();
+
     public int GridWidth => gridWidth;
     public int GridHeight => gridHeight;
 
+    [Serializable]
+    public class Prop
+    {
+        public Constants.PropGen PropGen = Constants.PropGen.None; // Loại prop
+        public Vector3Int Position; // Vị trí trong grid (x, y, z nếu cần 3D)
+    }
+    
+    [Serializable]
+    public enum PropGen 
+    {
+        Reward,
+        Obstacle,
+        None,
+    }
+
     public void GenerateProps()
     {
-        // Xóa các prop đã spawn trước đó
         ClearProps();
 
-        // Sinh prop dựa trên hình dạng
         switch (shapeType)
         {
-            case PropShape.Circle:
+            case Constants.PropShape.Circle:
                 GenerateCircle();
                 break;
-            case PropShape.Square:
+            case Constants.PropShape.Square:
                 GenerateSquare();
                 break;
-            case PropShape.Triangle:
+            case Constants.PropShape.Triangle:
                 GenerateTriangle();
                 break;
-            case PropShape.Hexagon:
+            case Constants.PropShape.Hexagon:
                 GenerateHexagon();
                 break;
-            case PropShape.Star:
+            case Constants.PropShape.Star:
                 GenerateStar();
                 break;
-            case PropShape.Line:
+            case Constants.PropShape.Line:
                 GenerateLine();
                 break;
-            case PropShape.Cross:
+            case Constants.PropShape.Cross:
                 GenerateCross();
                 break;
-            case PropShape.Spiral:
+            case Constants.PropShape.Spiral:
                 GenerateSpiral();
                 break;
-            case PropShape.Grid:
+            case Constants.PropShape.Grid:
                 GenerateGrid();
                 break;
-            case PropShape.Heart:
+            case Constants.PropShape.Heart:
                 GenerateHeart();
                 break;
-            case PropShape.Custom:
+            case Constants.PropShape.Custom:
                 GenerateCustomGrid();
                 break;
         }
     }
+
     [Header("Circle Settings")]
     [SerializeField] private int resolution = 10; 
     float radius;  // Kích thước radius của hình tròn
@@ -161,7 +167,6 @@ public class ToolGenerateProps : MonoBehaviour
         }
     }
 
-
     private void GenerateStar()
     {
         float outerRadius = size; // Bán kính ngoài
@@ -195,6 +200,10 @@ public class ToolGenerateProps : MonoBehaviour
         }
     }
 
+    public void ClearAllProps()
+    {
+        ClearProps();
+    }
 
     private void GenerateLine()
     {
@@ -255,12 +264,18 @@ public class ToolGenerateProps : MonoBehaviour
 
     private void GenerateCustomGrid()
     {
+        // Tính toán offset để căn giữa
+        float offsetX = (gridWidth * size) / 2f - size / 2f;
+        float offsetY = (gridHeight * size) / 2f - size / 2f;
+
         foreach (Vector2Int cell in selectedCells)
         {
-            Vector3 position = new Vector3(cell.x * size, cell.y * size, 0) + transform.position;
+            // Điều chỉnh vị trí theo offset
+            Vector3 position = new Vector3(cell.x * size - offsetX, cell.y * size - offsetY, 0) + transform.position;
             SpawnProp(position);
         }
     }
+
 
     private void SpawnProp(Vector3 position)
     {
@@ -286,37 +301,37 @@ public class ToolGenerateProps : MonoBehaviour
 
         switch (shapeType)
         {
-            case PropShape.Circle:
+            case Constants.PropShape.Circle:
                 DrawCirclePreview();
                 break;
-            case PropShape.Square:
+            case Constants.PropShape.Square:
                 DrawSquarePreview();
                 break;
-            case PropShape.Triangle:
+            case Constants.PropShape.Triangle:
                 DrawTrianglePreview();
                 break;
-            case PropShape.Hexagon:
+            case Constants.PropShape.Hexagon:
                 DrawHexagonPreview();
                 break;
-            case PropShape.Star:
+            case Constants.PropShape.Star:
                 DrawStarPreview();
                 break;
-            case PropShape.Line:
+            case Constants.PropShape.Line:
                 DrawLinePreview();
                 break;
-            case PropShape.Cross:
+            case Constants.PropShape.Cross:
                 DrawCrossPreview();
                 break;
-            case PropShape.Spiral:
+            case Constants.PropShape.Spiral:
                 DrawSpiralPreview();
                 break;
-            case PropShape.Grid:
-                DrawGridPreview();
+            case Constants.PropShape.Grid:
+                // DrawGridPreview();
                 break;
-            case PropShape.Heart:
+            case Constants.PropShape.Heart:
                 DrawHeartPreview();
                 break;
-            case PropShape.Custom:
+            case Constants.PropShape.Custom:
                 DrawCustomGridPreview();
                 break;
         }
@@ -326,19 +341,23 @@ public class ToolGenerateProps : MonoBehaviour
     {
         Gizmos.color = gizmoColor;
 
+        // Tính toán offset để căn giữa quanh transform.position
+        float offsetX = (gridWidth * size) / 2f;
+        float offsetY = (gridHeight * size) / 2f;
+
         // Vẽ grid
         for (int x = 0; x <= gridWidth; x++)
         {
             Gizmos.DrawLine(
-                transform.position + new Vector3(x * size, 0, 0),
-                transform.position + new Vector3(x * size, gridHeight * size, 0)
+                transform.position + new Vector3(x * size - offsetX, -offsetY, 0),
+                transform.position + new Vector3(x * size - offsetX, gridHeight * size - offsetY, 0)
             );
         }
         for (int y = 0; y <= gridHeight; y++)
         {
             Gizmos.DrawLine(
-                transform.position + new Vector3(0, y * size, 0),
-                transform.position + new Vector3(gridWidth * size, y * size, 0)
+                transform.position + new Vector3(-offsetX, y * size - offsetY, 0),
+                transform.position + new Vector3(gridWidth * size - offsetX, y * size - offsetY, 0)
             );
         }
 
@@ -346,10 +365,12 @@ public class ToolGenerateProps : MonoBehaviour
         Gizmos.color = customCellColor;
         foreach (Vector2Int cell in selectedCells)
         {
-            Vector3 center = transform.position + new Vector3(cell.x * size + size / 2, cell.y * size + size / 2, 0);
+            Vector3 center = transform.position + new Vector3(cell.x * size - offsetX + size / 2, cell.y * size - offsetY + size / 2, 0);
             Gizmos.DrawCube(center, new Vector3(size * 0.8f, size * 0.8f, 0.1f));
         }
     }
+
+
 
     private void DrawCirclePreview()
     {
@@ -488,19 +509,19 @@ public class ToolGenerateProps : MonoBehaviour
         }
     }
 
-    private void DrawGridPreview()
-    {
-        int gridSize = Mathf.CeilToInt(Mathf.Sqrt(propCount));
-        for (int x = 0; x < gridSize; x++)
-        {
-            for (int y = 0; y < gridSize; y++)
-            {
-                if (x * gridSize + y >= propCount) return;
-                Vector3 position = new Vector3(x, y, 0) * size;
-                Gizmos.DrawWireCube(transform.position + position, Vector3.one * 0.2f);
-            }
-        }
-    }
+    // private void DrawGridPreview()
+    // {
+    //     int gridSize = Mathf.CeilToInt(Mathf.Sqrt(propCount));
+    //     for (int x = 0; x < gridSize; x++)
+    //     {
+    //         for (int y = 0; y < gridSize; y++)
+    //         {
+    //             if (x * gridSize + y >= propCount) return;
+    //             Vector3 position = new Vector3(x, y, 0) * size;
+    //             Gizmos.DrawWireCube(transform.position + position, Vector3.one * 0.2f);
+    //         }
+    //     }
+    // }
 
     private void DrawHeartPreview()
     {
@@ -514,4 +535,35 @@ public class ToolGenerateProps : MonoBehaviour
         }
     }
 
+    public void SavePropsAsPrefab(string savePath)
+    {
+        if (spawnedProps.Count == 0)
+        {
+            Debug.LogWarning("Không có prop nào được sinh ra để lưu!");
+            return;
+        }
+
+#if UNITY_EDITOR
+        // Tạo một GameObject container để lưu tất cả các props
+        GameObject container = new GameObject("PropsContainer");
+
+        // Di chuyển tất cả các props thành con của container
+        foreach (GameObject prop in spawnedProps)
+        {
+            if (prop != null)
+                prop.transform.SetParent(container.transform);
+        }
+
+        // Lưu container thành prefab
+        string prefabPath = AssetDatabase.GenerateUniqueAssetPath(savePath);
+        PrefabUtility.SaveAsPrefabAsset(container, prefabPath);
+
+        // Xóa container sau khi lưu
+        DestroyImmediate(container);
+
+        Debug.Log($"Đã lưu prefab tại: {prefabPath}");
+#else
+        Debug.LogError("Hàm này chỉ hoạt động trong chế độ Editor!");
+#endif
+    }
 }

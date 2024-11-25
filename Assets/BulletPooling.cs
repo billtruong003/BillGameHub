@@ -24,15 +24,21 @@ public class BulletPooling : MonoBehaviour
             bulletPool.Enqueue(bullet);
         }
     }
+
+    Bullet bulletBehaviour;   
     public GameObject GetBullet()
     {
         if (bulletPool.Count == 0)
         {
             GameObject bullet = Instantiate(bulletPrefab, transform);
+            bulletBehaviour = bullet.GetComponent<Bullet>();
+            bulletBehaviour.bulletPooling = this;
             bullet.SetActive(false);
             bulletPool.Enqueue(bullet);
         }
         GameObject bulletFromPool = bulletPool.Dequeue();
+        bulletBehaviour = bulletFromPool.GetComponent<Bullet>();
+        bulletBehaviour.TriggerBulletObject();
         bulletFromPool.SetActive(true);
         return bulletFromPool;
     }
